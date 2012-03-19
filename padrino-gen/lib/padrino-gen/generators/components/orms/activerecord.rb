@@ -29,8 +29,15 @@ ActiveRecord::Base.configurations[:test] = {
 # Setup our logger
 ActiveRecord::Base.logger = logger
 
+# Raise exception on mass assignment protection for Active Record models
+ActiveRecord::Base.mass_assignment_sanitizer = :strict
+
+# Log the query plan for queries taking more than this (works
+# with SQLite, MySQL, and PostgreSQL)
+ActiveRecord::Base.auto_explain_threshold_in_seconds = 0.5
+
 # Include Active Record class name as root for JSON serialized output.
-ActiveRecord::Base.include_root_in_json = true
+ActiveRecord::Base.include_root_in_json = false
 
 # Store the full class name (including module namespace) in STI type column.
 ActiveRecord::Base.store_full_sti_class = true
@@ -111,6 +118,7 @@ def setup_orm
     require_dependencies 'sqlite3'
   end
   require_dependencies 'activerecord', :require => 'active_record'
+  insert_middleware 'ActiveRecord::ConnectionAdapters::ConnectionManagement'
   create_file("config/database.rb", ar)
 end
 
@@ -123,9 +131,10 @@ MODEL
 # options => { :fields => ["title:string", "body:string"], :app => 'app' }
 def create_model_file(name, options={})
   model_path = destination_root(options[:app], 'models', "#{name.to_s.underscore}.rb")
-  model_contents = AR_MODEL.gsub(/!NAME!/, name.to_s.camelize)
+  model_contents = AR_MODEL.gsub(/!NAME!/, name.to_s.underscore.camelize)
   create_file(model_path, model_contents,:skip => true)
 end
+
 
 AR_MIGRATION = (<<-MIGRATION) unless defined?(AR_MIGRATION)
 class !FILECLASS! < ActiveRecord::Migration
@@ -142,6 +151,7 @@ MIGRATION
 AR_MODEL_UP_MG = (<<-MIGRATION).gsub(/^/, '    ') unless defined?(AR_MODEL_UP_MG)
 create_table :!TABLE! do |t|
   !FIELDS!
+  t.timestamps
 end
 MIGRATION
 

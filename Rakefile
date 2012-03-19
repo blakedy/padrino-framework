@@ -57,10 +57,10 @@ desc "Bumps the version number based on given version"
 task :bump, [:version] do |t, args|
   raise "Please specify version=x.x.x !" unless args.version
   version_path = File.dirname(__FILE__) + '/padrino-core/lib/padrino-core/version.rb'
-  version_text = File.read(version_path).sub(/VERSION = '[\d\.]+'/, "VERSION = '#{args.version}'")
+  version_text = File.read(version_path).sub(/VERSION = '[a-z0-9\.]+'/, "VERSION = '#{args.version}'")
   say "Updating Padrino to version #{args.version}"
   File.open(version_path, 'w') { |f| f.write version_text }
-  sh 'git commit -a -m "Bumped version to %s"' % args.version
+  sh 'git commit -am "Bumped version to %s"' % args.version
 end
 
 desc "Executes a fresh install removing all padrino version and then reinstall all gems"
@@ -85,6 +85,7 @@ task :publish => :push do
   end
   Rake::Task["clean"].invoke
 end
+task :release => :publish
 
 desc "Run tests for all padrino stack gems"
 task :test do
@@ -106,6 +107,6 @@ end
 desc "Publish doc on padrinorb.com/api"
 task :pdoc => :doc do
   say "Publishing doc on padrinorb.com ..."
-  sh "scp -r doc/* root@srv2.lipsiasoft.biz:/mnt/www/apps/padrino/public/api/"
+  sh "scp -r doc/* root@lps2.lipsiasoft.com:/mnt/www/apps/padrino/public/api/"
   sh "rm -rf doc"
 end
