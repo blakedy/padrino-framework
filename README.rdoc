@@ -4,7 +4,9 @@ Padrino is the godfather of Sinatra. Follow us on
 {www.padrinorb.com}[http://padrinorb.com] and on twitter
 {@padrinorb}[http://twitter.com/padrinorb]
 
-{<img src="http://travis-ci.org/padrino/padrino-framework.png" />}[http://travis-ci.org/padrino/padrino-framework]
+{<img src="http://travis-ci.org/padrino/padrino-framework.png" alt="Testing Status" />}[http://travis-ci.org/padrino/padrino-framework]
+{<img src="https://gemnasium.com/padrino/padrino-framework.png" alt="Dependency Status" />}[https://gemnasium.com/padrino/padrino-framework]
+
 
 == Preface
 
@@ -56,7 +58,7 @@ check out the {Installation Guide}[http://www.padrinorb.com/guides/installation]
 
 == Usage
 
-Padrino is a framework which builds on the existing functionality and Sinatra and provides a variety of
+Padrino is a framework which builds on the existing functionality of Sinatra and provides a variety of
 additional tools and helpers to build upon that foundation. This README and Padrino documentation in general will focus
 on the enhancements to the core Sinatra functionality. To use Padrino, one should be familiar with the basic
 usage of Sinatra itself.

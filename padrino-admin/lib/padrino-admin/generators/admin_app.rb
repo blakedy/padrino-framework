@@ -55,17 +55,17 @@ module Padrino
           self.behavior = :revoke if options[:destroy]
 
           empty_directory destination_root("admin")
-          directory "templates/app",       destination_root("admin")
-          directory "templates/assets",    destination_root("public", "admin")
-          template  "templates/app.rb.tt", destination_root("admin/app.rb")
-          append_file destination_root("config/apps.rb"),  "\nPadrino.mount(\"Admin\").to(\"/admin\")"
-          insert_middleware 'ActiveRecord::ConnectionAdapters::ConnectionManagement', 'admin' if [:mini_record, :activerecord].include?(orm)
-
 
           # Setup Admin Model
           @model_name     = options[:admin_model].classify
           @model_singular = @model_name.underscore
           @model_plural   = @model_singular.pluralize
+
+          directory "templates/app",       destination_root("admin")
+          directory "templates/assets",    destination_root("public", "admin")
+          template  "templates/app.rb.tt", destination_root("admin/app.rb")
+          append_file destination_root("config/apps.rb"),  "\nPadrino.mount(\"Admin\").to(\"/admin\")"
+          insert_middleware 'ActiveRecord::ConnectionAdapters::ConnectionManagement', 'admin' if [:mini_record, :activerecord].include?(orm)
 
           params = [
             @model_singular, "name:string", "surname:string", "email:string", "crypted_password:string", "role:string",
@@ -123,6 +123,7 @@ module Padrino
           instructions << "Run 'bundle install'"
           instructions << "Run 'padrino rake ar:migrate'" if orm == :activerecord
           instructions << "Run 'padrino rake dm:auto:upgrade'" if orm == :datamapper
+          instructions << "Run 'ohm mani padme hum'" if orm == :ohm
           instructions << "Run 'padrino rake seed'"
           instructions << "Visit the admin panel in the browser at '/admin'"
           instructions.map! { |i| "  #{instructions.index(i)+1}) #{i}" }

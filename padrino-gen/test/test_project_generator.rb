@@ -130,7 +130,6 @@ describe "ProjectGenerator" do
     should "output gem files for base app" do
       capture_io { generate(:project, 'sample_project', "--root=#{@apptmp}", '--script=none') }
       assert_match_in_file(/gem 'padrino'/, "#{@apptmp}/sample_project/Gemfile")
-      assert_match_in_file(/gem 'sinatra-flash'/, "#{@apptmp}/sample_project/Gemfile")
     end
   end
 
@@ -263,6 +262,14 @@ describe "ProjectGenerator" do
         assert_match_in_file(/sample_project_development/, "#{@apptmp}/sample_project/config/database.rb")
       end
 
+      # DataMapper has do_mysql that is the version of MySQL driver.
+      should "properly generate for mysql2" do
+        out, err = capture_io { generate(:project, 'sample_project', "--root=#{@apptmp}", '--orm=datamapper', '--adapter=mysql2') }
+        assert_match_in_file(/gem 'dm-mysql-adapter'/, "#{@apptmp}/sample_project/Gemfile")
+        assert_match_in_file(%r{"mysql://}, "#{@apptmp}/sample_project/config/database.rb")
+        assert_match_in_file(/sample_project_development/, "#{@apptmp}/sample_project/config/database.rb")
+      end
+
       should "properly generate for sqlite" do
         out, err = capture_io { generate(:project, 'sample_project', "--root=#{@apptmp}", '--orm=datamapper', '--adapter=sqlite') }
         assert_match_in_file(/gem 'dm-sqlite-adapter'/, "#{@apptmp}/sample_project/Gemfile")
@@ -289,9 +296,14 @@ describe "ProjectGenerator" do
     should "properly generate for mongoid" do
       out, err = capture_io { generate(:project, 'project.com', "--root=#{@apptmp}", '--orm=mongoid', '--script=none') }
       assert_match(/applying.*?mongoid.*?orm/, out)
-      assert_match_in_file(/gem 'mongoid'/, "#{@apptmp}/project.com/Gemfile")
+      if RUBY_VERSION >= '1.9'
+        assert_match_in_file(/gem 'mongoid', ">=3.0"/, "#{@apptmp}/project.com/Gemfile")
+        assert_match_in_file(/Mongoid::Config.sessions/, "#{@apptmp}/project.com/config/database.rb")
+      else
+        assert_match_in_file(/gem 'mongoid', "~>2.0"/, "#{@apptmp}/project.com/Gemfile")
+        assert_match_in_file(/Mongoid.database/, "#{@apptmp}/project.com/config/database.rb")
+      end
       assert_match_in_file(/gem 'bson_ext'/, "#{@apptmp}/project.com/Gemfile")
-      assert_match_in_file(/Mongoid.database/, "#{@apptmp}/project.com/config/database.rb")
       assert_match_in_file(/project_com/, "#{@apptmp}/project.com/config/database.rb")
     end
 
@@ -307,9 +319,7 @@ describe "ProjectGenerator" do
     should "properly generate for ohm" do
       out, err = capture_io { generate(:project, 'sample_project', "--root=#{@apptmp}", '--orm=ohm', '--script=none') }
       assert_match(/applying.*?ohm.*?orm/, out)
-      assert_match_in_file(/gem 'json'/, "#{@apptmp}/sample_project/Gemfile")
       assert_match_in_file(/gem 'ohm'/, "#{@apptmp}/sample_project/Gemfile")
-      assert_match_in_file(/gem 'ohm-contrib', :require => "ohm\/contrib"/, "#{@apptmp}/sample_project/Gemfile")
       assert_match_in_file(/Ohm.connect/, "#{@apptmp}/sample_project/config/database.rb")
     end
 
