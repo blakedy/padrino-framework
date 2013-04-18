@@ -2,6 +2,8 @@ SHOULDA_SETUP = (<<-TEST).gsub(/^ {10}/, '') unless defined?(SHOULDA_SETUP)
 PADRINO_ENV = 'test' unless defined?(PADRINO_ENV)
 require File.expand_path(File.dirname(__FILE__) + "/../config/boot")
 
+require "test/unit"
+
 class Test::Unit::TestCase
   include Rack::Test::Methods
 
@@ -63,13 +65,9 @@ def setup_test
   require_dependencies 'rack-test', :require => 'rack/test', :group => 'test'
   require_dependencies 'shoulda', :group => 'test'
   insert_test_suite_setup SHOULDA_SETUP
-  if options[:orm] == "activerecord"
-    inject_into_file destination_root("test/test_config.rb"), "require 'shoulda/active_record'\n\n", :before => /class.*?\n/
-  end
   create_file destination_root("test/test.rake"), SHOULDA_RAKE
 end
 
-# Generates a controller test given the controllers name
 def generate_controller_test(name)
   shoulda_contents = SHOULDA_CONTROLLER_TEST.gsub(/!NAME!/, name.to_s.underscore.camelize)
   controller_test_path = File.join('test',options[:app],'controllers',"#{name.to_s.underscore}_controller_test.rb")

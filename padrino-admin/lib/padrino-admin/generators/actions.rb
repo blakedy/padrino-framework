@@ -27,14 +27,14 @@ module Padrino
         # Tell us for now wich orm we support
         #
         def supported_orm
-          [:mini_record, :datamapper, :activerecord, :mongomapper, :mongoid, :couchrest, :sequel, :ohm]
+          [:minirecord, :datamapper, :activerecord, :mongomapper, :mongoid, :couchrest, :sequel, :ohm]
         end
 
         ##
         # Tell us for now wich rendering engine we support
         #
         def supported_ext
-          [:haml, :erb, :slim]
+          [:haml, :slim, :erb]
         end
 
         ##
@@ -54,6 +54,22 @@ module Padrino
           content = File.binread(path)
           content.gsub!(/^\s+role\.project_module :#{controller}, '\/#{controller}'\n/, '')
           File.open(path, 'wb') { |f| f.write content }
+        end
+
+        # Returns the app_name for the application at root.
+        #
+        # @param [String] app
+        #   folder name of application.
+        #
+        # @return [String] module name for application.
+        #
+        # @example
+        #   fetch_app_name('subapp')
+        #
+        # @api public
+        def fetch_app_name(app='app')
+          app_path = destination_root(app, 'app.rb')
+          @app_name ||= File.read(app_path).scan(/module\s(.*?)\n/).flatten[0]
         end
       end # Actions
     end # Admin

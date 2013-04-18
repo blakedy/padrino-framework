@@ -4,7 +4,6 @@ require 'i18n'
 require 'enumerator'
 require 'active_support/time_with_zone'               # next extension depends on this
 require 'active_support/core_ext/string/conversions'  # to_date
-require 'active_support/core_ext/float/rounding'      # round
 require 'active_support/option_merger'                # with_options
 require 'active_support/core_ext/object/with_options' # with_options
 require 'active_support/inflector'                    # humanize
@@ -32,6 +31,7 @@ module Padrino
       #   Padrino::Helpers::FormatHelpers
       #   Padrino::Helpers::RenderHelpers
       #   Padrino::Helpers::NumberHelpers
+      #   Padrino::Helpers::Breadcrumbs
       #
       # @param [Sinatra::Application] app
       #   The specified padrino application
@@ -52,6 +52,7 @@ module Padrino
         app.helpers Padrino::Helpers::RenderHelpers
         app.helpers Padrino::Helpers::NumberHelpers
         app.helpers Padrino::Helpers::TranslationHelpers
+        app.helpers Padrino::Helpers::Breadcrumbs
       end
       alias :included :registered
     end

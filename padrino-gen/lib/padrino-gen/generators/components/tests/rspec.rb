@@ -29,19 +29,23 @@ end
 TEST
 
 RSPEC_RAKE = (<<-TEST).gsub(/^ {12}/, '') unless defined?(RSPEC_RAKE)
-require 'rspec/core/rake_task'
+begin
+  require 'rspec/core/rake_task'
 
-spec_tasks = Dir['spec/*/'].map { |d| File.basename(d) }
+  spec_tasks = Dir['spec/*/'].map { |d| File.basename(d) }
 
-spec_tasks.each do |folder|
-  RSpec::Core::RakeTask.new("spec:\#{folder}") do |t|
-    t.pattern = "./spec/\#{folder}/**/*_spec.rb"
-    t.rspec_opts = %w(-fs --color)
+  spec_tasks.each do |folder|
+    RSpec::Core::RakeTask.new("spec:\#{folder}") do |t|
+      t.pattern = "./spec/\#{folder}/**/*_spec.rb"
+      t.rspec_opts = %w(-fs --color)
+    end
   end
-end
 
-desc "Run complete application spec suite"
-task 'spec' => spec_tasks.map { |f| "spec:\#{f}" }
+  desc "Run complete application spec suite"
+  task 'spec' => spec_tasks.map { |f| "spec:\#{f}" }
+rescue LoadError
+  puts "RSpec is not part of this bundle, skip specs."
+end
 TEST
 
 RSPEC_MODEL_TEST = (<<-TEST).gsub(/^ {12}/, '') unless defined?(RSPEC_MODEL_TEST)
@@ -58,7 +62,6 @@ def setup_test
   create_file destination_root("spec/spec.rake"), RSPEC_RAKE
 end
 
-# Generates a controller test given the controllers name
 def generate_controller_test(name)
   rspec_contents = RSPEC_CONTROLLER_TEST.gsub(/!NAME!/, name.to_s.underscore.camelize)
   controller_spec_path = File.join('spec',options[:app],'controllers',"#{name.to_s.underscore}_controller_spec.rb")
