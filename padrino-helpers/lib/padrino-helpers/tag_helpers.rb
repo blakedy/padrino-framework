@@ -8,6 +8,7 @@ module Padrino
       # Tag values escaped to html entities
       #
       ESCAPE_VALUES = {
+        "&" => "&amp;",
         "<" => "&lt;",
         ">" => "&gt;",
         '"' => "&quot;"
@@ -31,7 +32,13 @@ module Padrino
         :muted,
         :readonly,
         :required,
-        :selected
+        :selected,
+        :declare,
+        :defer,
+        :ismap,
+        :itemscope,
+        :noresize,
+        :novalidate
       ]
 
       ##
@@ -213,7 +220,7 @@ module Padrino
       #
       # @example
       #   tag :hr, :class => 'dotted'
-      #   # => <hr class="dotted">
+      #   # => <hr class="dotted" />
       #
       #   tag :input, :name => 'username', :type => :text
       #   # => <input name="username" type="text" />

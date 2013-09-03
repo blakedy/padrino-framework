@@ -1,3 +1,4 @@
+#encoding: utf-8 
 require File.expand_path(File.dirname(__FILE__) + '/helper')
 
 class FooError < RuntimeError; end
@@ -100,6 +101,24 @@ describe "Routing" do
     assert_equal "no access", body
   end
 
+  should 'parse routes that are encoded' do
+    mock_app do 
+      get('/щч') { 'success!' }
+    end
+    get(URI.escape('/щч'))
+    assert_equal 'success!', body    
+  end
+
+  should 'encode params using UTF-8' do
+    skip unless ''.respond_to?(:encoding) # for 1.8.7
+
+    mock_app do 
+      get('/:foo') { params[:foo].encoding.name }
+    end
+    get '/bar'
+    assert_equal 'UTF-8', body
+  end
+
   should 'match correctly similar paths' do
     mock_app do
       get("/my/:foo_id"){ params[:foo_id] }
@@ -130,6 +149,20 @@ describe "Routing" do
     assert_equal "hello 123", body
     get "/main/asd"
     assert_equal 404, status
+  end
+
+  should "parse params when use regex for parts of a route" do
+    mock_app do
+      post :index, :with => [:foo, :bar], :bar => /.+/ do
+        "show #{params[:foo]}"
+      end
+
+      get :index, :map => '/mystuff/:a_id/boing/:boing_id' do
+        "show #{params[:a_id]} and #{params[:boing_id]}"
+      end
+    end
+    get "/mystuff/5/boing/2"
+    assert_equal "show 5 and 2", body
   end
 
   should "not generate overlapping head urls" do
@@ -205,6 +238,28 @@ describe "Routing" do
     assert_equal "/d.js?foo=bar", body
     get "/e.xml"
     assert_equal 404, status
+  end
+
+  should 'generate absolute urls' do
+    mock_app do
+      get(:hash, :with => :id){ absolute_url(:hash, :id => 1) }
+    end
+    get "/hash/2"
+    assert_equal "http://example.org/hash/1", body
+    get "https://example.org/hash/2"
+    assert_equal "https://example.org/hash/1", body
+  end
+
+  should 'generate proper absolute urls for mounted apps' do
+    class Test < Padrino::Application
+      get :foo do
+        absolute_url(:foo, :id => 1)
+      end
+    end
+    Padrino.mount("Test").to("/test")
+    @app = Padrino.application
+    get('/test/foo')
+    assert_equal 'http://example.org/test/foo?id=1', body
   end
 
   should 'allow regex url with format' do
@@ -773,7 +828,6 @@ describe "Routing" do
 
 
   should 'respect priorities' do
-    skip
     route_order = []
     mock_app do
       get(:index, :priority => :normal) { route_order << :normal; pass }
@@ -783,6 +837,19 @@ describe "Routing" do
     get '/'
     assert_equal [:high, :normal, :low], route_order
     assert_equal "hello", body
+  end
+
+  should 'catch all after controllers' do
+    mock_app do
+      get(:index, :with => :slug, :priority => :low) { "catch all" }
+      controllers :contact do
+        get(:index) { "contact"}
+      end
+    end
+    get "/contact"
+    assert_equal "contact", body
+    get "/foo"
+    assert_equal "catch all", body
   end
 
   should 'allow optionals' do
