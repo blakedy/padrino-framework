@@ -1,4 +1,3 @@
-# Load rake tasks from common rake task definition locations
 Dir["{lib/tasks/**,tasks/**,test,spec}/*.rake"].each do |file|
   begin
     load(file)
@@ -7,8 +6,8 @@ Dir["{lib/tasks/**,tasks/**,test,spec}/*.rake"].each do |file|
   end
 end
 
-# Loads the Padrino applications mounted within the project
-# setting up the required environment for Padrino
+# Loads the Padrino applications mounted within the project.
+# Setting up the required environment for Padrino.
 task :environment do
   require File.expand_path('config/boot.rb', Rake.application.original_dir)
 
@@ -17,12 +16,21 @@ task :environment do
   end
 end
 
+# Loads skeleton Padrino environment, no models, no application settings.
+task :skeleton do
+  module Padrino::Reloader
+    def self.safe_load(file, options)
+      super unless file.include?('/models/')
+    end
+  end
+  require File.expand_path('config/boot.rb', Rake.application.original_dir)
+end
+
 desc "Generate a secret key"
 task :secret do
   shell.say SecureRandom.hex(32)
 end
 
-# lists all routes of a given app
 def list_app_routes(app, args)
   app_routes = app.named_routes
   app_routes.reject! { |r| r.identifier.to_s !~ /#{args.query}/ } if args.query.present?

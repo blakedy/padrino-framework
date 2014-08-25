@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../helper')
 
 describe "AdminAppGenerator" do
   before do
-    @apptmp = "#{Dir.tmpdir}/padrino-tests/#{UUID.new.generate}"
+    @apptmp = "#{Dir.tmpdir}/padrino-tests/#{SecureRandom.hex}"
     `mkdir -p #{@apptmp}`
   end
 
@@ -11,6 +11,12 @@ describe "AdminAppGenerator" do
   end
 
   describe 'the admin app generator' do
+    before do
+      # Account gets created by Datamapper's migration and then gets
+      # rejected by model generator as already defined
+      Object.send(:remove_const, :Account) if defined?(Account)
+    end
+
     it 'should fail outside app root' do
       out, err = capture_io { generate(:admin_app, "-r=#{@apptmp}") }
       assert_match(/not at the root/, out)
@@ -43,14 +49,20 @@ describe "AdminAppGenerator" do
       assert_file_exists("#{@apptmp}/sample_project/public/admin/stylesheets/application.css")
       assert_file_exists("#{@apptmp}/sample_project/public/admin/stylesheets/bootstrap.css")
       assert_file_exists("#{@apptmp}/sample_project/public/admin/javascripts/application.js")
-      assert_file_exists("#{@apptmp}/sample_project/public/admin/javascripts/jquery-1.9.0.min.js")
+      assert_file_exists("#{@apptmp}/sample_project/public/admin/javascripts/jquery-1.11.0.min.js")
       assert_file_exists("#{@apptmp}/sample_project/models/account.rb")
       assert_file_exists("#{@apptmp}/sample_project/db/seeds.rb")
       assert_file_exists("#{@apptmp}/sample_project/db/migrate/001_create_accounts.rb")
-      assert_match_in_file 'Padrino.mount("SampleProject::Admin", :app_file => File.expand_path(\'../../admin/app.rb\', __FILE__)).to("/admin")', "#{@apptmp}/sample_project/config/apps.rb"
+      assert_match_in_file 'Padrino.mount("SampleProject::Admin", :app_file => Padrino.root(\'admin/app.rb\')).to("/admin")', "#{@apptmp}/sample_project/config/apps.rb"
       assert_match_in_file 'module SampleProject', "#{@apptmp}/sample_project/admin/app.rb"
       assert_match_in_file 'class Admin < Padrino::Application', "#{@apptmp}/sample_project/admin/app.rb"
       assert_match_in_file 'role.project_module :accounts, \'/accounts\'', "#{@apptmp}/sample_project/admin/app.rb"
+    end
+
+    it "should generate the master app" do
+      capture_io { generate(:project, 'sample_project', "--root=#{@apptmp}", '-d=activerecord') }
+      capture_io { generate(:admin_app, "--root=#{@apptmp}/sample_project", '--admin-name=master') }
+      assert_file_exists("#{@apptmp}/sample_project/master/app.rb")
     end
 
     # users can override certain templates from a generators/templates folder in the destination_root
@@ -196,11 +208,8 @@ describe "AdminAppGenerator" do
         seeds_rb.puts "# Old Seeds Content"
       end
 
-      capture_io do
-        $stdout.expects(:print).with { |value| value =~ /Overwrite\s.*?\/db\/seeds.rb/ }.never
-        $stdin.stubs(:gets).returns('y')
-        generate(:admin_app, "--root=#{@apptmp}/sample_project")
-      end
+      out, err = capture_io { generate(:admin_app, "--root=#{@apptmp}/sample_project") }
+      refute_match /Overwrite\s.*?\/db\/seeds.rb/, out
 
       assert_file_exists "#{@apptmp}/sample_project/db/seeds.old"
       assert_match_in_file 'Account.create(', "#{@apptmp}/sample_project/db/seeds.rb"

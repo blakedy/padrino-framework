@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../helper')
 
 describe "AccountModelGenerator" do
   before do
-    @apptmp = "#{Dir.tmpdir}/padrino-tests/#{UUID.new.generate}"
+    @apptmp = "#{Dir.tmpdir}/padrino-tests/#{SecureRandom.hex}"
     %x[mkdir -p #{@apptmp}]
   end
 
@@ -17,7 +17,7 @@ describe "AccountModelGenerator" do
       @model = "#{@apptmp}/sample_project/models/account.rb"
     end
 
-    it 'should be a activerecord model instance' do
+    it 'should be an activerecord model instance' do
       assert_match_in_file(/class Account < ActiveRecord::Base/m, @model)
     end
   end
@@ -29,7 +29,7 @@ describe "AccountModelGenerator" do
       @model = "#{@apptmp}/sample_project/models/account.rb"
     end
 
-    it 'should be a activerecord model instance' do
+    it 'should be an activerecord model instance' do
       assert_match_in_file(/class Account < ActiveRecord::Base/m, @model)
     end
   end

@@ -1,13 +1,13 @@
 if PadrinoTasks.load?(:datamapper, defined?(DataMapper))
   namespace :dm do
     namespace :auto do
-      desc "Perform automigration (reset your db data)"
+      desc "Perform auto migration (reset your db data)"
       task :migrate => :environment do
         ::DataMapper.repository.auto_migrate!
         puts "<= dm:auto:migrate executed"
       end
 
-      desc "Perform non destructive automigration"
+      desc "Perform non destructive auto migration"
       task :upgrade => :environment do
         ::DataMapper.repository.auto_upgrade!
         puts "<= dm:auto:upgrade executed"
@@ -51,33 +51,31 @@ if PadrinoTasks.load?(:datamapper, defined?(DataMapper))
     desc "Create the database"
     task :create => :environment do
       config = DataMapper.repository.adapter.options.symbolize_keys
+      adapter = config[:adapter]
       user, password, host = config[:user], config[:password], config[:host]
-      database       = config[:database]  || config[:path].sub(/\//, "")
+
+      database       = config[:database]  || config[:path]
+      database.sub!(/^\//,'') unless adapter.start_with?('sqlite')
+
       charset        = config[:charset]   || ENV['CHARSET']   || 'utf8'
       collation      = config[:collation] || ENV['COLLATION'] || 'utf8_unicode_ci'
 
       puts "=> Creating database '#{database}'"
-      if config[:adapter] == 'sqlite3'
-        DataMapper.setup(DataMapper.repository.name, config)
-      else
-        # require 'padrino-gen/padrino-tasks/sql-helpers'
-        Padrino::Generators::SqlHelpers.create_db(config[:adapter], user, password, host, database, charset, collation) 
-      end
+      Padrino::Generators::SqlHelpers.create_db(adapter, user, password, host, database, charset, collation)
       puts "<= dm:create executed"
     end
 
     desc "Drop the database (postgres and mysql only)"
     task :drop => :environment do
       config = DataMapper.repository.adapter.options.symbolize_keys
+      adapter = config[:adapter]
       user, password, host = config[:user], config[:password], config[:host]
-      database       = config[:database] || config[:path].sub(/\//, "")
+
+      database       = config[:database] || config[:path]
+      database.sub!(/^\//,'') unless adapter.start_with?('sqlite')
 
       puts "=> Dropping database '#{database}'"
-      if config[:adapter] == 'sqlite3'
-        File.delete(config[:path]) if File.exist?(config[:path])
-      else
-        Padrino::Generators::SqlHelpers.drop_db(config[:adapter], user, password, host, database)
-      end
+      Padrino::Generators::SqlHelpers.drop_db(adapter, user, password, host, database)
       puts "<= dm:drop executed"
     end
 

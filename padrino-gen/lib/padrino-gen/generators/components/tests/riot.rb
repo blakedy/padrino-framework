@@ -1,6 +1,7 @@
 RIOT_SETUP = (<<-TEST).gsub(/^ {10}/, '') unless defined?(RIOT_SETUP)
-PADRINO_ENV = 'test' unless defined?(PADRINO_ENV)
+RACK_ENV = 'test' unless defined?(RACK_ENV)
 require File.expand_path(File.dirname(__FILE__) + "/../config/boot")
+Dir[File.expand_path(File.dirname(__FILE__) + "/../app/helpers/**/*.rb")].each(&method(:require))
 
 # Specify your app using the #app helper inside a context.
 # Takes either an app class or a block argument.
@@ -74,6 +75,20 @@ context "!NAME! Model" do
 end
 TEST
 
+RIOT_HELPER_TEST = (<<-TEST) unless defined?(RIOT_HELPER_TEST)
+require File.expand_path(File.dirname(__FILE__) + '!PATH!/test_config.rb')
+
+describe "!NAME!" do
+  setup do
+    helpers = Class.new
+    helpers.extend !NAME!
+    [helpers.foo]
+  end
+
+  asserts("#foo"){ topic.first }.nil
+end
+TEST
+
 def setup_test
   require_dependencies 'rack-test', :require => 'rack/test', :group => 'test'
   require_dependencies 'riot', :group => 'test'
@@ -89,8 +104,14 @@ end
 
 def generate_model_test(name)
   riot_contents = RIOT_MODEL_TEST.gsub(/!NAME!/, name.to_s.underscore.camelize)
-  path = options[:app] == '.' ? '/..' : '/../..'
-  riot_contents.gsub!(/!PATH!/,path)
+  riot_contents.gsub!(/!PATH!/, recognize_path)
   model_test_path = File.join('test',options[:app],'models',"#{name.to_s.underscore}_test.rb")
   create_file destination_root(model_test_path), riot_contents, :skip => true
+end
+
+def generate_helper_test(name, project_name, app_name)
+  riot_contents = RIOT_HELPER_TEST.gsub(/!NAME!/, "#{project_name}::#{app_name}::#{name}")
+  riot_contents.gsub!(/!PATH!/, recognize_path)
+  helper_spec_path = File.join('test', options[:app], 'helpers', "#{name.underscore}_test.rb")
+  create_file destination_root(helper_spec_path), riot_contents, :skip => true
 end
